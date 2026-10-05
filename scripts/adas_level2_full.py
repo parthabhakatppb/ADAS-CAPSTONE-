@@ -19,10 +19,15 @@ import numpy as np
 import torch
 from ultralytics import YOLO
 import supervision as sv
+import sys
+
+# Import Live ASCII ECU Actuator Dashboard
+sys.path.append(str(Path(__file__).parent))
+from adas_actuator_dashboard import LiveTerminalDashboard
 
 
 class ADASLevel2Engine:
-    def __init__(self, weights_path, camera_height=1.65, focal_length_y=720.0):
+    def __init__(self, weights_path, camera_height=1.65, focal_length_y=720.0, enable_dashboard=True):
         self.model = YOLO(weights_path)
         self.tracker = sv.ByteTrack()
         self.box_annotator = sv.BoxAnnotator(thickness=2)
@@ -31,6 +36,8 @@ class ADASLevel2Engine:
         self.camera_height = camera_height
         self.focal_length_y = focal_length_y
         self.history = defaultdict(lambda: deque(maxlen=10))
+        self.enable_dashboard = enable_dashboard
+        self.dashboard = LiveTerminalDashboard() if enable_dashboard else None
 
     def estimate_distance(self, bbox, frame_height):
         x1, y1, x2, y2 = bbox
@@ -162,7 +169,7 @@ class ADASLevel2Engine:
             return "GREEN (GO)"
         return "CLEAR"
 
-    def process_video(self, video_path, output_path, conf_thresh=0.35):
+    def process_video(self, video_path, output_path, conf_thresh=0.35, show_dashboard=True):
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
             print(f"Error opening video: {video_path}")
@@ -171,11 +178,13 @@ class ADASLevel2Engine:
         w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or 1
 
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         out = cv2.VideoWriter(output_path, fourcc, fps, (w, h))
 
-        print(f"Running Full Level 2 ADAS on: {video_path} ({w}x{h} @ {fps:.1f} FPS)")
+        if not show_dashboard:
+            print(f"Running Full Level 2 ADAS on: {video_path} ({w}x{h} @ {fps:.1f} FPS)")
 
         frame_idx = 0
         while cap.isOpened():
@@ -198,18 +207,27 @@ class ADASLevel2Engine:
             frame_closest_dist = float('inf')
             frame_critical_state = "SAFE"
             traffic_signal_status = "NONE"
+            primary_target_info = {"track_id": "--", "class_name": "None", "speed_kmh": 0.0, "ttc_s": float("inf")}
+            detection_counts = defaultdict(int)
 
             for i in range(len(detections)):
                 bbox = detections.xyxy[i]
                 class_id = detections.class_id[i]
                 class_name = self.model.names[class_id]
                 track_id = detections.tracker_id[i] if detections.tracker_id is not None else i
+                detection_counts[class_name] += 1
 
                 dist_m = self.estimate_distance(bbox, h)
                 vel_kmh, ttc_s, state = self.compute_ttc_and_velocity(track_id, dist_m, t_now)
 
                 if dist_m < frame_closest_dist:
                     frame_closest_dist = dist_m
+                    primary_target_info = {
+                        "track_id": track_id,
+                        "class_name": class_name,
+                        "speed_kmh": vel_kmh,
+                        "ttc_s": ttc_s,
+                    }
 
                 if state == "AEB_BRAKE":
                     frame_critical_state = "AEB_BRAKE"
@@ -280,9 +298,24 @@ class ADASLevel2Engine:
 
             out.write(annotated_frame)
 
+            # Update and render Live Terminal ASCII Dashboard
+            if show_dashboard and self.dashboard:
+                self.dashboard.update_and_render(
+                    frame_idx=frame_idx,
+                    total_frames=total_frames,
+                    fps=fps,
+                    critical_state=frame_critical_state,
+                    closest_dist=frame_closest_dist,
+                    primary_target_info=primary_target_info,
+                    offset_m=offset_m,
+                    ldw_state=ldw_state,
+                    traffic_signal=traffic_signal_status,
+                    detection_counts=detection_counts,
+                )
+
         cap.release()
         out.release()
-        print(f"Full Level 2 ADAS Video saved to: {output_path}")
+        print(f"\nFull Level 2 ADAS Video saved to: {output_path}")
 
 
 def main():
@@ -291,10 +324,11 @@ def main():
     ap.add_argument("--weights", default="runs/detect/train-2/weights/best.pt")
     ap.add_argument("--out", default="full_level2_adas_output.mp4")
     ap.add_argument("--conf", type=float, default=0.35)
+    ap.add_argument("--no_dashboard", action="store_true", help="Disable live ASCII terminal dashboard")
     args = ap.parse_args()
 
-    engine = ADASLevel2Engine(weights_path=args.weights)
-    engine.process_video(args.video, args.out, conf_thresh=args.conf)
+    engine = ADASLevel2Engine(weights_path=args.weights, enable_dashboard=not args.no_dashboard)
+    engine.process_video(args.video, args.out, conf_thresh=args.conf, show_dashboard=not args.no_dashboard)
 
 
 if __name__ == "__main__":
