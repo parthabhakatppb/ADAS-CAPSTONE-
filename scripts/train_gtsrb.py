@@ -10,7 +10,7 @@ Expects the Kaggle GTSRB layout:
     gtsrb/Test/*.png + Test.csv (path,ClassId)
 
 Usage:
-    python scripts/train_gtsrb.py --data_root /kaggle/working/data/gtsrb --epochs 15
+    python scripts/train_gtsrb.py --data_root ./data/gtsrb --epochs 15
 """
 import argparse
 from pathlib import Path
@@ -110,7 +110,7 @@ def main():
     ap.add_argument("--batch_size", type=int, default=128)
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--img_size", type=int, default=64)
-    ap.add_argument("--out", default="/kaggle/working/runs/gtsrb_classifier.pt")
+    ap.add_argument("--out", default="runs/gtsrb_classifier.pt")
     args = ap.parse_args()
 
     device = "cuda" if torch.cuda.is_available() else "cpu"

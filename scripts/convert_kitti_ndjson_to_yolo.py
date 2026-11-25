@@ -18,8 +18,8 @@ Ultralytics' 8-class KITTI taxonomy -> our Phase 1 6-class taxonomy:
 
 Usage:
     python scripts/convert_kitti_ndjson_to_yolo.py \
-        --ndjson_path /kaggle/working/kitti.ndjson \
-        --out_root /kaggle/working/data/phase1_yolo/kitti \
+        --ndjson_path ./data/kitti.ndjson \
+        --out_root ./data/phase1_yolo/kitti \
         --max_workers 16
 
 The image download step is the slow part (7,481 images) — this uses a

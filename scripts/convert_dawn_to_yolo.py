@@ -14,8 +14,8 @@ in the training mix too.
 
 Usage:
     python scripts/convert_dawn_to_yolo.py \
-        --dawn_root /kaggle/working/data/DAWN \
-        --out_root /kaggle/working/data/unified_yolo/dawn
+        --dawn_root ./data/DAWN \
+        --out_root ./data/unified_yolo/dawn
 """
 import argparse
 import csv

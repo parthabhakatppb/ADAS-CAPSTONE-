@@ -6,15 +6,15 @@ README_DATA_PIPELINE.md for the full conversion pipeline):
 
     python scripts/train.py \
         --dataset unified \
-        --data_root /kaggle/working/data/unified_yolo/merged \
+        --data_root ./data/unified_yolo/merged \
         --variant hybrid_s --epochs 30 --batch_size 16 --img_size 640 --num_classes 12
 
 BDD100K is still supported via --dataset bdd100k (10 classes):
 
     python scripts/train.py \
         --dataset bdd100k \
-        --data_root /kaggle/working/data/bdd100k_yolo \
-        --images_root /kaggle/working/data/bdd100k/images/100k \
+        --data_root ./data/bdd100k_yolo \
+        --images_root ./data/bdd100k/images/100k \
         --variant hybrid_s --epochs 30 --num_classes 10
 
 Swap --variant cnn_baseline / hybrid_n / hybrid_s / hybrid_m to run the
@@ -54,7 +54,7 @@ def parse_args():
     ap.add_argument("--lr", type=float, default=2e-4)
     ap.add_argument("--num_classes", type=int, default=12,
                      help="12 for the unified IDD/KITTI/DAWN taxonomy (default); use 10 for --dataset bdd100k")
-    ap.add_argument("--out_dir", default="/kaggle/working/runs")
+    ap.add_argument("--out_dir", default="runs")
     ap.add_argument("--use_wandb", action="store_true")
     return ap.parse_args()
 

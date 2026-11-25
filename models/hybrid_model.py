@@ -1,8 +1,8 @@
 r"""
 Full Hybrid CNN-Transformer ADAS detector: assembles
   CSPDarknetBackbone -> TransformerNeck -> DetectionHead
-                                        \-> DrivableAreaHead (optional)
-                                        \-> WeatherHead (optional)
+                                        --> DrivableAreaHead (optional)
+                                        --> WeatherHead (optional)
 
 `num_transformer_layers=0` gives you the pure-CNN baseline (for the
 ablation study / fair comparison against plain YOLOv8) using the exact

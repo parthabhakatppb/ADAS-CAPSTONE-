@@ -5,8 +5,8 @@ XML per image, organized under IDD_Detection/{JPEGImages,Annotations}.
 
 Usage:
     python scripts/convert_idd_to_yolo.py \
-        --idd_root /kaggle/working/data/IDD_Detection \
-        --out_root /kaggle/working/data/unified_yolo/idd
+        --idd_root ./data/IDD_Detection \
+        --out_root ./data/unified_yolo/idd
 
 NOTE: IDD's exact folder layout has shifted across dataset releases —
 verify Annotations/JPEGImages subfolder names against what you actually

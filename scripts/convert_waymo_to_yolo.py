@@ -11,8 +11,8 @@ flagged in the earlier discussion. Install with:
 
 Usage:
     python scripts/convert_waymo_to_yolo.py \
-        --waymo_tfrecord_dir /kaggle/working/data/waymo/training \
-        --out_root /kaggle/working/data/unified_yolo/waymo \
+        --waymo_tfrecord_dir ./data/waymo/training \
+        --out_root ./data/unified_yolo/waymo \
         --max_segments 20   # Waymo is huge; cap how many .tfrecord segments to process
 
 Given the scope tradeoff discussed earlier, consider running this with

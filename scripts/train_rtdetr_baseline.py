@@ -11,7 +11,7 @@ Ultralytics YOLO uses, so no extra conversion needed.
 Usage:
     pip install ultralytics
     python scripts/train_rtdetr_baseline.py \
-        --data_yaml /kaggle/working/data/bdd100k_yolo/bdd100k.yaml \
+        --data_yaml ./data/bdd100k_yolo/bdd100k.yaml \
         --epochs 30 --imgsz 640
 
 This also runs the FPS benchmark at the end (batch size 1, matching
@@ -69,7 +69,7 @@ def main():
     ap.add_argument("--epochs", type=int, default=30)
     ap.add_argument("--imgsz", type=int, default=640)
     ap.add_argument("--batch_size", type=int, default=8)  # RT-DETR is memory-heavy, smaller batch than the hybrid model
-    ap.add_argument("--out_dir", default="/kaggle/working/runs")
+    ap.add_argument("--out_dir", default="runs")
     args = ap.parse_args()
 
     device = "cuda" if torch.cuda.is_available() else "cpu"

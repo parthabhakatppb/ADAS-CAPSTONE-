@@ -9,6 +9,7 @@ Kept as separate small heads so you can drop DrivableAreaHead /
 WeatherHead entirely for the MVP and re-add them for the stretch goal
 without touching the backbone/neck/detection-head code.
 """
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -37,7 +38,7 @@ class DFL(nn.Module):
 class DecoupledHeadBlock(nn.Module):
     """Per-scale decoupled cls/box branches, sharing nothing —
     YOLOv8 found this outperforms a shared-then-split head."""
-    def __init__(self, c_in, num_classes, reg_max=16, c_mid=None):
+    def __init__(self, c_in, num_classes, reg_max=16, c_mid=None, prior_prob=0.01):
         super().__init__()
         c_mid = c_mid or max(c_in // 2, 64)
         self.cls_branch = nn.Sequential(
@@ -49,21 +50,42 @@ class DecoupledHeadBlock(nn.Module):
             nn.Conv2d(c_mid, 4 * reg_max, 1),
         )
 
+        # Prior probability bias initialization to prevent background collapse under Focal Loss
+        if prior_prob is not None and self.cls_branch[-1].bias is not None:
+            bias_val = -math.log((1.0 - prior_prob) / prior_prob)  # approx -4.595 for p=0.01
+            nn.init.constant_(self.cls_branch[-1].bias, bias_val)
+
     def forward(self, x):
         return self.cls_branch(x), self.box_branch(x)
 
 
 class DetectionHead(nn.Module):
-    def __init__(self, channels, num_classes=10, reg_max=16, strides=(8, 16, 32)):
+    def __init__(self, channels, num_classes=10, reg_max=16, strides=(8, 16, 32), prior_prob=0.01):
         super().__init__()
         self.num_classes = num_classes
         self.reg_max = reg_max
         self.strides = strides
         self.blocks = nn.ModuleDict({
-            k: DecoupledHeadBlock(channels[k], num_classes, reg_max)
+            k: DecoupledHeadBlock(channels[k], num_classes, reg_max, prior_prob=prior_prob)
             for k in ["P3", "P4", "P5"]
         })
         self.dfl = DFL(reg_max)
+
+        # Expose cls_preds for direct iteration / inspection
+        self.cls_preds = [self.blocks[k].cls_branch[-1] for k in ["P3", "P4", "P5"]]
+        self.init_biases(prior_prob=prior_prob)
+
+    def init_biases(self, prior_prob=0.01):
+        """RetinaNet / YOLO prior probability bias initialization:
+        b = -log((1 - p) / p) ≈ -4.595 for p=0.01.
+        Initializes classification logits so that initial sigmoid probability is p=0.01.
+        Prevents thousands of background anchors from dominating the loss in early
+        epochs and collapsing classification logits to extreme negatives."""
+        if prior_prob is not None:
+            bias_val = -math.log((1.0 - prior_prob) / prior_prob)
+            for cls_layer in self.cls_preds:
+                if cls_layer.bias is not None:
+                    nn.init.constant_(cls_layer.bias, bias_val)
 
     def _make_anchors(self, shapes, device, dtype):
         anchors, stride_tensor = [], []

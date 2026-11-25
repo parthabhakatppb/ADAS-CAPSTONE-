@@ -10,8 +10,8 @@ import subprocess
 from pathlib import Path
 from IPython.display import Video
 
-SOURCE_VIDEO = "/kaggle/working/output_annotated.mp4"
-PREVIEW_VIDEO = "/kaggle/working/output_preview_h264.mp4"
+SOURCE_VIDEO = "output_annotated.mp4"
+PREVIEW_VIDEO = "output_preview_h264.mp4"
 
 subprocess.run([
     "ffmpeg", "-y", "-i", SOURCE_VIDEO,

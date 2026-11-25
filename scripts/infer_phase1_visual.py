@@ -5,16 +5,14 @@ actually show in a review (rather than infer_dashcam.py's terminal-only
 readout, which was built for the later Phase 2 taxonomy anyway).
 
 Kaggle usage (run as a notebook cell with the ! prefix, or in a script):
-    !python scripts/infer_phase1_visual.py \
-        --video /kaggle/input/your-dataset/dashcam.mp4 \
-        --weights /kaggle/working/runs/phase1_hybrid_s/best.pt \
+    python scripts/infer_phase1_visual.py \
+        --video ./data/dashcam.mp4 \
+        --weights runs/phase1_hybrid_s/best.pt \
         --variant hybrid_s \
-        --out /kaggle/working/output_annotated.mp4
+        --out output_annotated.mp4
 
-Kaggle notebooks can't pop up a video player mid-run — after this
-finishes, the output file lands in /kaggle/working/, and you play it
-via the Output tab (Kaggle renders .mp4 files there), or download it
-and play it locally.
+After this finishes, the output file lands in the specified path, and you play it
+locally or via your video player.
 """
 import argparse
 from pathlib import Path
@@ -170,7 +168,7 @@ def main():
     ap.add_argument("--video", required=True)
     ap.add_argument("--weights", required=True)
     ap.add_argument("--variant", default="hybrid_s", choices=list(VARIANT_PRESETS.keys()))
-    ap.add_argument("--out", default="/kaggle/working/output_annotated.mp4")
+    ap.add_argument("--out", default="output_annotated.mp4")
     ap.add_argument("--conf_thresh", type=float, default=0.35)
     ap.add_argument("--img_size", type=int, default=640)
     ap.add_argument("--max_frames", type=int, default=None,

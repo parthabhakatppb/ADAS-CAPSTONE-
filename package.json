@@ -1,0 +1,10 @@
+{
+  "name": "adas-capstone",
+  "private": true,
+  "scripts": {
+    "frontend": "cd frontend && npm run dev",
+    "backend": "cd backend && ..\\.tools\\apache-maven-3.9.9\\bin\\mvn.cmd spring-boot:run",
+    "install:frontend": "cd frontend && npm install",
+    "build:frontend": "cd frontend && npm run build"
+  }
+}

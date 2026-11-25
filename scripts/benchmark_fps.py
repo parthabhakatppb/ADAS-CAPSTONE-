@@ -67,7 +67,10 @@ def main():
 
     if args.weights:
         ckpt = torch.load(args.weights, map_location=device)
-        state_dict = ckpt if not isinstance(ckpt, dict) or "state_dict" not in ckpt else ckpt["state_dict"]
+        if isinstance(ckpt, dict):
+            state_dict = ckpt.get("model", ckpt.get("state_dict", ckpt))
+        else:
+            state_dict = ckpt
 
         if "det_head.blocks.P3.cls_branch.2.weight" in state_dict:
             num_classes = state_dict["det_head.blocks.P3.cls_branch.2.weight"].shape[0]

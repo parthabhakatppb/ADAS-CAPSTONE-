@@ -12,8 +12,8 @@ lines like:
 
 Usage:
     python scripts/convert_gtsdb_to_yolo.py \
-        --gtsdb_root /kaggle/working/data/gtsdb \
-        --out_root /kaggle/working/data/phase1_yolo/gtsdb \
+        --gtsdb_root ./data/gtsdb \
+        --out_root ./data/phase1_yolo/gtsdb \
         --val_fraction 0.15
 """
 import argparse

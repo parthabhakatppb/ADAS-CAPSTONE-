@@ -4,8 +4,10 @@ __pycache__/
 *$py.class
 .pytest_cache/
 
-# Datasets
-data/
+# Datasets (raw and merged data folders; keep dataset code)
+data/*
+!data/*.py
+!data/__init__.py
 
 # Model Checkpoints & Large Weights
 *.pt

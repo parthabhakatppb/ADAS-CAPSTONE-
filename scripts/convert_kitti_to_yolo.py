@@ -7,8 +7,8 @@ configs/phase1_classes.py). KITTI's raw layout: training/image_2/*.png
 
 Usage:
     python scripts/convert_kitti_to_yolo.py \
-        --kitti_root /kaggle/working/data/kitti \
-        --out_root /kaggle/working/data/phase1_yolo/kitti \
+        --kitti_root ./data/kitti \
+        --out_root ./data/phase1_yolo/kitti \
         --val_fraction 0.1
 """
 import argparse

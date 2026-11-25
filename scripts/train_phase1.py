@@ -5,19 +5,28 @@ with IDD/DAWN. Reuses the same backbone/neck/head architecture, just
 with use_drivable_head=False, use_weather_head=False and the smaller
 6-class Phase 1 taxonomy.
 
+Features:
+- Prior probability bias initialization (-4.595) to prevent background collapse
+- Automatic Mixed Precision (AMP FP16)
+- Warmup + Cosine Annealing learning rate schedule
+- Structured epoch logging (results.csv + TensorBoard + optional W&B)
+- Full per-epoch/periodic mAP@0.5, mAP@0.5:0.95, Precision, Recall validation
+
 Usage:
     python scripts/train_phase1.py \
-        --data_root /kaggle/working/data/phase1_yolo/merged \
+        --data_root ./data/phase1_yolo/merged \
         --variant hybrid_s --epochs 30 --batch_size 16
 """
 import argparse
+import csv
+import math
 import time
 from pathlib import Path
 
 import torch
 from torch.utils.data import DataLoader
 from torch.optim import AdamW
-from torch.optim.lr_scheduler import CosineAnnealingLR
+from torch.optim.lr_scheduler import CosineAnnealingLR, LambdaLR
 
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -26,6 +35,7 @@ from models.hybrid_model import HybridADASModel
 from models.losses import DetectionLoss
 from data.phase1_dataset import Phase1Dataset, collate_fn
 from configs.phase1_classes import NUM_PHASE1_CLASSES
+from utils.metrics import run_validation_evaluation
 
 VARIANT_PRESETS = {
     "cnn_baseline": dict(width_mult=0.50, depth_mult=0.33, num_transformer_layers=0),
@@ -46,23 +56,28 @@ def build_model(variant):
 
 
 def parse_args():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--data_root", required=True, help="output of merge_phase1.py")
+    ap = argparse.ArgumentParser(description="Train Hybrid ADAS Phase 1 Perception Model")
+    ap.add_argument("--data_root", default="./data/phase1_yolo/merged", help="Output of merge_phase1.py")
     ap.add_argument("--variant", default="hybrid_s", choices=list(VARIANT_PRESETS.keys()))
     ap.add_argument("--epochs", type=int, default=30)
+    ap.add_argument("--warmup_epochs", type=int, default=3, help="Linear warmup epochs")
     ap.add_argument("--batch_size", type=int, default=16)
     ap.add_argument("--img_size", type=int, default=640)
     ap.add_argument("--lr", type=float, default=2e-4)
+    ap.add_argument("--weight_decay", type=float, default=5e-4)
     ap.add_argument("--out_dir", default="runs")
-    ap.add_argument("--patience", type=int, default=7, help="Early stopping patience")
-    ap.add_argument("--num_workers", type=int, default=4, help="DataLoader workers")
+    ap.add_argument("--patience", type=int, default=10, help="Early stopping patience")
+    ap.add_argument("--num_workers", type=int, default=2, help="DataLoader workers")
     ap.add_argument("--no_amp", action="store_true", help="Disable Automatic Mixed Precision (AMP)")
+    ap.add_argument("--eval_freq", type=int, default=1, help="Run full mAP evaluation every N epochs")
+    ap.add_argument("--use_wandb", action="store_true", help="Log to Weights & Biases")
     return ap.parse_args()
 
 
 def run_epoch(model, loader, loss_fn, optimizer, scaler, device, train=True, use_amp=True):
     model.train(train)
     total_loss, n_batches = 0.0, 0
+    total_cls_loss, total_box_loss = 0.0, 0
     max_conf_epoch, total_boxes_above_35 = 0.0, 0
 
     for batch in loader:
@@ -77,11 +92,16 @@ def run_epoch(model, loader, loss_fn, optimizer, scaler, device, train=True, use
 
             if train:
                 optimizer.zero_grad()
-                scaler.scale(loss).backward()
-                scaler.unscale_(optimizer)
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=10.0)
-                scaler.step(optimizer)
-                scaler.update()
+                if scaler is not None and device == "cuda" and use_amp:
+                    scaler.scale(loss).backward()
+                    scaler.unscale_(optimizer)
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=10.0)
+                    scaler.step(optimizer)
+                    scaler.update()
+                else:
+                    loss.backward()
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=10.0)
+                    optimizer.step()
 
             if not train:
                 scores = preds["cls_logits"].sigmoid()
@@ -89,12 +109,17 @@ def run_epoch(model, loader, loss_fn, optimizer, scaler, device, train=True, use
                 total_boxes_above_35 += (scores.max(-1).values > 0.35).sum().item()
 
         total_loss += loss.item()
+        total_cls_loss += losses["cls_loss"].item()
+        total_box_loss += losses["box_loss"].item() if torch.is_tensor(losses["box_loss"]) else losses["box_loss"]
         n_batches += 1
 
     avg_loss = total_loss / max(n_batches, 1)
+    avg_cls = total_cls_loss / max(n_batches, 1)
+    avg_box = total_box_loss / max(n_batches, 1)
+
     if not train:
-        return avg_loss, max_conf_epoch, total_boxes_above_35
-    return avg_loss
+        return avg_loss, avg_cls, avg_box, max_conf_epoch, total_boxes_above_35
+    return avg_loss, avg_cls, avg_box
 
 
 def main():
@@ -109,7 +134,7 @@ def main():
     use_amp = not args.no_amp and device == "cuda"
 
     train_ds = Phase1Dataset(args.data_root, split="train", img_size=args.img_size)
-    val_ds = Phase1Dataset(args.data_root, split="val", img_size=args.img_size)
+    val_ds = Phase1Dataset(args.data_root, split="val", img_size=args.img_size, augment=False)
 
     loader_kwargs = {
         "num_workers": args.num_workers,
@@ -119,47 +144,169 @@ def main():
 
     train_loader = DataLoader(
         train_ds, batch_size=args.batch_size, shuffle=True,
-        collate_fn=collate_fn, drop_last=True, **loader_kwargs
+        collate_fn=collate_fn, drop_last=(len(train_ds) > args.batch_size), **loader_kwargs
     )
     val_loader = DataLoader(
         val_ds, batch_size=args.batch_size, shuffle=False,
         collate_fn=collate_fn, **loader_kwargs
     )
-    print(f"train images: {len(train_ds)}  val images: {len(val_ds)} | AMP FP16: {use_amp}")
+    print(f"train images: {len(train_ds)}  val images: {len(val_ds)} | AMP FP16: {use_amp} | device: {device}")
 
     model = build_model(args.variant).to(device)
     print(f"{args.variant}: {model.count_params()/1e6:.2f}M params, {NUM_PHASE1_CLASSES} classes")
 
     loss_fn = DetectionLoss(num_classes=NUM_PHASE1_CLASSES)
-    optimizer = AdamW(model.parameters(), lr=args.lr, weight_decay=5e-4)
-    scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
-    scheduler = CosineAnnealingLR(optimizer, T_max=args.epochs)
+    optimizer = AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    scaler = torch.amp.GradScaler("cuda", enabled=use_amp) if device == "cuda" else None
 
-    best_val = float("inf")
+    # Warmup + Cosine Annealing Schedule
+    warmup_epochs = max(args.warmup_epochs, 0)
+    def lr_lambda(epoch):
+        if epoch < warmup_epochs:
+            return float(epoch + 1) / float(max(1, warmup_epochs))
+        progress = float(epoch - warmup_epochs) / float(max(1, args.epochs - warmup_epochs))
+        return 0.5 * (1.0 + math.cos(math.pi * progress))
+
+    scheduler = LambdaLR(optimizer, lr_lambda=lr_lambda)
+
+    # TensorBoard logging
+    tb_writer = None
+    try:
+        from torch.utils.tensorboard import SummaryWriter
+        tb_writer = SummaryWriter(log_dir=str(out_dir / "logs"))
+    except Exception as e:
+        print(f"TensorBoard SummaryWriter unavailable ({e}). Continuing with CSV logging.")
+
+    # Optional WandB logging
+    wandb_run = None
+    if args.use_wandb:
+        try:
+            import wandb
+            wandb_run = wandb.init(project="adas-capstone", name=f"phase1_{args.variant}", config=vars(args))
+        except ImportError:
+            print("WandB not installed. Skipping WandB logging.")
+
+    # CSV Logging
+    csv_path = out_dir / "results.csv"
+    csv_file = open(csv_path, mode="w", newline="", encoding="utf-8")
+    csv_writer = csv.writer(csv_file)
+    csv_writer.writerow([
+        "epoch", "train_loss", "train_cls", "train_box",
+        "val_loss", "val_cls", "val_box",
+        "precision", "recall", "mAP50", "mAP50_95",
+        "max_val_conf", "boxes_above_35", "lr", "time_s"
+    ])
+    csv_file.flush()
+
+    best_val_loss = float("inf")
+    best_map50 = 0.0
     epochs_since_improvement = 0
+
+    print(f"Starting training for {args.epochs} epochs. Checkpoints and logs saving to {out_dir}\n")
+
     for epoch in range(args.epochs):
         t0 = time.time()
-        train_loss = run_epoch(model, train_loader, loss_fn, optimizer, scaler, device, train=True, use_amp=use_amp)
-        val_loss, max_conf, boxes_35 = run_epoch(model, val_loader, loss_fn, optimizer, scaler, device, train=False, use_amp=use_amp)
-        scheduler.step()
-        print(f"[phase1_{args.variant}] epoch {epoch+1:02d}/{args.epochs:02d} "
-              f"train_loss={train_loss:.4f} val_loss={val_loss:.4f} "
-              f"max_val_conf={max_conf:.4f} ({max_conf*100:5.1f}%) boxes>0.35={boxes_35} ({time.time()-t0:.1f}s)", flush=True)
+        cur_lr = optimizer.param_groups[0]["lr"]
 
-        if val_loss < best_val:
-            best_val = val_loss
+        train_loss, train_cls, train_box = run_epoch(
+            model, train_loader, loss_fn, optimizer, scaler, device, train=True, use_amp=use_amp
+        )
+        val_loss, val_cls, val_box, max_conf, boxes_35 = run_epoch(
+            model, val_loader, loss_fn, optimizer, scaler, device, train=False, use_amp=use_amp
+        )
+        scheduler.step()
+        epoch_time = time.time() - t0
+
+        # Run mAP validation metrics
+        precision, recall, map50, map50_95 = 0.0, 0.0, 0.0, 0.0
+        if (epoch + 1) % args.eval_freq == 0 or (epoch + 1) == args.epochs:
+            if len(val_ds) > 0:
+                eval_res = run_validation_evaluation(model, val_loader, device, num_classes=NUM_PHASE1_CLASSES)
+                precision = eval_res["mean"]["precision"]
+                recall = eval_res["mean"]["recall"]
+                map50 = eval_res["mean"]["map50"]
+                map50_95 = eval_res["mean"]["map50_95"]
+
+        # Terminal Log
+        print(
+            f"[phase1_{args.variant}] epoch {epoch+1:02d}/{args.epochs:02d} "
+            f"train_loss={train_loss:.4f} val_loss={val_loss:.4f} "
+            f"mAP@0.5={map50:.4f} mAP@0.5:95={map50_95:.4f} "
+            f"max_val_conf={max_conf:.4f} ({max_conf*100:5.1f}%) "
+            f"boxes>0.35={boxes_35} lr={cur_lr:.2e} ({epoch_time:.1f}s)",
+            flush=True
+        )
+
+        # TensorBoard Logging
+        if tb_writer is not None:
+            tb_writer.add_scalar("loss/train_total", train_loss, epoch + 1)
+            tb_writer.add_scalar("loss/train_cls", train_cls, epoch + 1)
+            tb_writer.add_scalar("loss/train_box", train_box, epoch + 1)
+            tb_writer.add_scalar("loss/val_total", val_loss, epoch + 1)
+            tb_writer.add_scalar("loss/val_cls", val_cls, epoch + 1)
+            tb_writer.add_scalar("loss/val_box", val_box, epoch + 1)
+            tb_writer.add_scalar("metrics/max_conf", max_conf, epoch + 1)
+            tb_writer.add_scalar("metrics/precision", precision, epoch + 1)
+            tb_writer.add_scalar("metrics/recall", recall, epoch + 1)
+            tb_writer.add_scalar("metrics/mAP50", map50, epoch + 1)
+            tb_writer.add_scalar("metrics/mAP50_95", map50_95, epoch + 1)
+            tb_writer.add_scalar("lr", cur_lr, epoch + 1)
+
+        # WandB Logging
+        if wandb_run:
+            wandb.log({
+                "epoch": epoch + 1,
+                "train_loss": train_loss, "train_cls": train_cls, "train_box": train_box,
+                "val_loss": val_loss, "val_cls": val_cls, "val_box": val_box,
+                "max_val_conf": max_conf, "boxes_above_35": boxes_35,
+                "precision": precision, "recall": recall, "mAP50": map50, "mAP50_95": map50_95,
+                "lr": cur_lr,
+            })
+
+        # CSV Logging
+        csv_writer.writerow([
+            epoch + 1, f"{train_loss:.4f}", f"{train_cls:.4f}", f"{train_box:.4f}",
+            f"{val_loss:.4f}", f"{val_cls:.4f}", f"{val_box:.4f}",
+            f"{precision:.4f}", f"{recall:.4f}", f"{map50:.4f}", f"{map50_95:.4f}",
+            f"{max_conf:.4f}", boxes_35, f"{cur_lr:.2e}", f"{epoch_time:.2f}"
+        ])
+        csv_file.flush()
+
+        # Checkpoints
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
             epochs_since_improvement = 0
-            torch.save(model.state_dict(), out_dir / "best.pt")
+            torch.save({
+                "epoch": epoch + 1,
+                "model": model.state_dict(),
+                "optimizer": optimizer.state_dict(),
+                "val_loss": val_loss,
+                "map50": map50,
+                "variant": args.variant,
+            }, out_dir / "best.pt")
         else:
             epochs_since_improvement += 1
 
-        torch.save(model.state_dict(), out_dir / "last.pt")
+        torch.save({
+            "epoch": epoch + 1,
+            "model": model.state_dict(),
+            "optimizer": optimizer.state_dict(),
+            "val_loss": val_loss,
+            "map50": map50,
+            "variant": args.variant,
+        }, out_dir / "last.pt")
 
         if epochs_since_improvement >= args.patience:
-            print(f"No val improvement for {args.patience} epochs — stopping early at epoch {epoch+1}.")
+            print(f"No validation loss improvement for {args.patience} epochs — early stopping at epoch {epoch+1}.")
             break
 
-    print(f"Done. Best val loss {best_val:.4f}, checkpoints in {out_dir}")
+    csv_file.close()
+    if tb_writer is not None:
+        tb_writer.close()
+    if wandb_run:
+        wandb_run.finish()
+
+    print(f"\nDone. Best val loss {best_val_loss:.4f}, checkpoints and results in {out_dir}")
 
 
 if __name__ == "__main__":

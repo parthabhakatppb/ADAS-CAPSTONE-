@@ -118,8 +118,8 @@ class DetectionLoss(nn.Module):
     def forward(self, preds, gt_boxes_list, gt_classes_list):
         cls_logits = preds["cls_logits"]   # (B,N,num_classes)
         pred_boxes = preds["boxes"]        # (B,N,4)
-        anchors = preds["anchors"][0]      # (N,2) pixel-space anchor centers
         strides = preds["strides"]         # (1,N,1)
+        anchors = preds["anchors"][0] * strides[0]  # (N,2) pixel-space anchor centers
 
         B = cls_logits.shape[0]
         total_cls_loss, total_box_loss = 0.0, 0.0

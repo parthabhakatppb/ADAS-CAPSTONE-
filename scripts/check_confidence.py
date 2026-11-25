@@ -62,7 +62,9 @@ def main():
     num_classes = len(PHASE1_CLASSES)
     
     model = HybridADASModel(num_classes=num_classes, use_drivable_head=False, use_weather_head=False).to(device)
-    model.load_state_dict(torch.load(args.weights, map_location=device))
+    ckpt = torch.load(args.weights, map_location=device)
+    state_dict = ckpt["model"] if isinstance(ckpt, dict) and "model" in ckpt else ckpt
+    model.load_state_dict(state_dict)
     model.eval()
 
     if args.image:

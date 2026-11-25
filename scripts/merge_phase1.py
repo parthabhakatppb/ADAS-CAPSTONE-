@@ -6,9 +6,9 @@ separate on purpose so Phase 1 has a minimal, easy-to-explain pipeline.
 
 Usage:
     python scripts/merge_phase1.py \
-        --phase1_root /kaggle/working/data/phase1_yolo \
-        --kitti_images /kaggle/working/data/kitti/training/image_2 \
-        --gtsdb_images /kaggle/working/data/gtsdb \
+        --phase1_root ./data/phase1_yolo \
+        --kitti_images ./data/kitti/training/image_2 \
+        --gtsdb_images ./data/gtsdb \
         --out_name merged
 """
 import argparse

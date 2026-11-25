@@ -6,8 +6,8 @@ Weather-Condition Classification head, and lane/drivable-area masks
 left as-is (already PNG masks in the BDD100K download).
 
 Usage:
-    python bdd_to_yolo.py --bdd_root /kaggle/working/data/bdd100k \
-                           --out_root /kaggle/working/data/bdd100k_yolo
+    python bdd_to_yolo.py --bdd_root ./data/bdd100k \
+                           --out_root ./data/bdd100k_yolo
 """
 import argparse
 import json

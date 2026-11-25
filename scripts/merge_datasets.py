@@ -15,7 +15,7 @@ Produces:
 
 Usage:
     python scripts/merge_datasets.py \
-        --unified_root /kaggle/working/data/unified_yolo \
+        --unified_root ./data/unified_yolo \
         --include idd kitti dawn            # omit waymo unless you actually ran its converter
         --out_name merged
 """
