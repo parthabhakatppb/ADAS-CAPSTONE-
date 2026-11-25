@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 380" width="100%" height="100%">
+  <rect width="1200" height="380" rx="16" fill="#070B14" stroke="#1E293B" stroke-width="2"/>
+  <text x="36" y="40" fill="#F8FAFC" font-family="system-ui, sans-serif" font-size="19" font-weight="700">MODEL ABLATION &amp; SAFETY TELEMETRY DASHBOARD</text>
+
+  <!-- Card 1: Ablation Benchmark -->
+  <g transform="translate(36, 66)">
+    <rect width="540" height="280" rx="12" fill="#0D1424" stroke="#1E293B"/>
+    <text x="20" y="30" fill="#38BDF8" font-family="monospace" font-size="12" font-weight="700">BACKBONE ABLATION (mAP@0.5 vs FPS)</text>
+
+    <!-- Row 1 -->
+    <text x="20" y="72" fill="#E2E8F0" font-family="system-ui, sans-serif" font-size="12" font-weight="600">YOLOv8-S (Pure CNN)</text>
+    <rect x="200" y="59" width="210" height="14" rx="4" fill="#1E293B"/>
+    <rect x="200" y="59" width="165" height="14" rx="4" fill="#10B981">
+      <animate attributeName="width" from="0" to="165" dur="1.1s" fill="freeze"/>
+    </rect>
+    <text x="422" y="71" fill="#10B981" font-family="monospace" font-size="11">42.1 mAP · 142 FPS</text>
+
+    <!-- Row 2 -->
+    <text x="20" y="122" fill="#E2E8F0" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Hybrid-S (1-ViT Layer)</text>
+    <rect x="200" y="109" width="210" height="14" rx="4" fill="#1E293B"/>
+    <rect x="200" y="109" width="180" height="14" rx="4" fill="#06B6D4">
+      <animate attributeName="width" from="0" to="180" dur="1.3s" fill="freeze"/>
+    </rect>
+    <text x="422" y="121" fill="#06B6D4" font-family="monospace" font-size="11">44.8 mAP · 98 FPS</text>
+
+    <!-- Row 3 -->
+    <text x="20" y="172" fill="#F8FAFC" font-family="system-ui, sans-serif" font-size="12" font-weight="700">Hybrid-S (2-ViT ★)</text>
+    <rect x="200" y="159" width="210" height="14" rx="4" fill="#1E293B"/>
+    <rect x="200" y="159" width="196" height="14" rx="4" fill="#38BDF8">
+      <animate attributeName="width" from="0" to="196" dur="1.5s" fill="freeze"/>
+    </rect>
+    <text x="422" y="171" fill="#38BDF8" font-family="monospace" font-size="11">46.3 mAP · 78 FPS</text>
+
+    <!-- Row 4 -->
+    <text x="20" y="222" fill="#E2E8F0" font-family="system-ui, sans-serif" font-size="12" font-weight="600">RT-DETR Baseline</text>
+    <rect x="200" y="209" width="210" height="14" rx="4" fill="#1E293B"/>
+    <rect x="200" y="209" width="206" height="14" rx="4" fill="#A78BFA">
+      <animate attributeName="width" from="0" to="206" dur="1.7s" fill="freeze"/>
+    </rect>
+    <text x="422" y="221" fill="#A78BFA" font-family="monospace" font-size="11">47.9 mAP · 32 FPS</text>
+
+    <text x="20" y="260" fill="#64748B" font-family="monospace" font-size="10">★ Recommended deployment balance: +4.2 mAP over pure CNN at real-time speed</text>
+  </g>
+
+  <!-- Card 2: Safety Thresholds & Risk Engine -->
+  <g transform="translate(604, 66)">
+    <rect width="560" height="280" rx="12" fill="#0D1424" stroke="#1E293B"/>
+    <text x="20" y="30" fill="#10B981" font-family="monospace" font-size="12" font-weight="700">COLLISION RISK &amp; TTC ALERT MATRIX</text>
+
+    <!-- Safe -->
+    <rect x="20" y="54" width="520" height="58" rx="8" fill="#10B981" fill-opacity="0.08" stroke="#10B981" stroke-opacity="0.4"/>
+    <circle cx="42" cy="83" r="7" fill="#10B981"/>
+    <text x="62" y="79" fill="#10B981" font-family="monospace" font-size="13" font-weight="700">SAFE — NOMINAL TRACKING</text>
+    <text x="62" y="97" fill="#CBD5E1" font-family="system-ui, sans-serif" font-size="11">TTC ≥ 4.0s and Distance ≥ 15.0m · Continuous ByteTrack ID persistence</text>
+
+    <!-- Caution -->
+    <rect x="20" y="126" width="520" height="58" rx="8" fill="#F59E0B" fill-opacity="0.08" stroke="#F59E0B" stroke-opacity="0.45"/>
+    <circle cx="42" cy="155" r="7" fill="#F59E0B">
+      <animate attributeName="opacity" values="1;0.4;1" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    <text x="62" y="151" fill="#F59E0B" font-family="monospace" font-size="13" font-weight="700">CAUTION — FORWARD COLLISION WARNING (FCW)</text>
+    <text x="62" y="169" fill="#CBD5E1" font-family="system-ui, sans-serif" font-size="11">2.5s ≤ TTC &lt; 4.0s or Distance &lt; 15.0m · Amber bounding box &amp; trajectory alert</text>
+
+    <!-- Critical -->
+    <rect x="20" y="198" width="520" height="58" rx="8" fill="#EF4444" fill-opacity="0.12" stroke="#EF4444" stroke-opacity="0.65"/>
+    <circle cx="42" cy="227" r="7" fill="#EF4444">
+      <animate attributeName="r" values="6;9;6" dur="0.8s" repeatCount="indefinite"/>
+    </circle>
+    <text x="62" y="223" fill="#EF4444" font-family="monospace" font-size="13" font-weight="700">CRITICAL — EMERGENCY BRAKE WARNING (AEB)</text>
+    <text x="62" y="241" fill="#CBD5E1" font-family="system-ui, sans-serif" font-size="11">TTC &lt; 2.5s or Vulnerable Road User &lt; 8.0m · Red HUD banner + MongoDB AlertLog</text>
+  </g>
+</svg>

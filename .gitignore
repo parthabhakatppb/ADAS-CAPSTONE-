@@ -28,3 +28,10 @@ Thumbs.db
 .idea/
 .vscode/
 ADAS-CAPSTONE-/
+
+# Node / Frontend / Java / Build Tools
+node_modules/
+frontend/node_modules/
+frontend/dist/
+backend/target/
+.tools/

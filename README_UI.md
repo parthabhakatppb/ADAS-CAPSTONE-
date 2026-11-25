@@ -1,5 +1,9 @@
 # ADAS Web UI — Setup & Usage
 
+<p align="center">
+  <img src="docs/assets/live_adas_dashboard.jpg" alt="Live ADAS Web UI" width="100%" />
+</p>
+
 ## Overview
 
 A production-grade **Real-Time ADAS Perception & Telemetry Web Application** for the
