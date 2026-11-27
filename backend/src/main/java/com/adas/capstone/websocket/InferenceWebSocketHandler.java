@@ -64,14 +64,14 @@ public class InferenceWebSocketHandler extends AbstractWebSocketHandler {
     public void afterConnectionEstablished(WebSocketSession session) {
         log.info("WebSocket connected: {}", session.getId());
 
-        TelemetrySession ts = telemetry.createSession("Hybrid-S (CNN + 2-Layer ViT)", "FP32");
+        TelemetrySession ts = telemetry.createSession("Hybrid-S (CNN + 2-Layer Transformer)", "FP32");
         sessionIds.put(session.getId(), ts.getId());
         frameCounts.put(session.getId(), 0);
         fpsAccum.put(session.getId(), 0.0);
         latAccum.put(session.getId(), 0.0);
         brakeCounts.put(session.getId(), 0);
         inFlight.put(session.getId(), new AtomicBoolean(false));
-        modelVariants.put(session.getId(), "Hybrid-S (CNN + 2-Layer ViT)");
+        modelVariants.put(session.getId(), "Hybrid-S (CNN + 2-Layer Transformer)");
         precisions.put(session.getId(), "FP32");
         confThresholds.put(session.getId(), 0.25);
 
@@ -131,7 +131,7 @@ public class InferenceWebSocketHandler extends AbstractWebSocketHandler {
         message.getPayload().get(bytes);
 
         String sidKey = session.getId();
-        String mv = modelVariants.getOrDefault(sidKey, "Hybrid-S (CNN + 2-Layer ViT)");
+        String mv = modelVariants.getOrDefault(sidKey, "Hybrid-S (CNN + 2-Layer Transformer)");
         String prec = precisions.getOrDefault(sidKey, "FP32");
         double conf = confThresholds.getOrDefault(sidKey, 0.25);
         String weather = weatherOverrides.get(sidKey);

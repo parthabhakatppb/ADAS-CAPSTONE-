@@ -1,9 +1,10 @@
 import React from 'react';
-import { InputMode, WeatherCondition } from '../types/adas';
+import { InputMode } from '../types/adas';
 import { ScenarioName } from '../engine/simulator';
+import HudSelect, { HudSelectOption } from './HudSelect';
 import {
   Activity, Camera, Film, Volume2, VolumeX,
-  CloudRain, Sun, Moon, CloudFog,
+  CloudRain, Sun, Moon, CloudFog, Cpu, Route, Sparkles,
 } from 'lucide-react';
 
 interface TopBarProps {
@@ -22,19 +23,27 @@ interface TopBarProps {
   onMuteToggle: () => void;
 }
 
-const MODELS = [
-  'Hybrid-S (CNN + 1-Layer ViT)',
-  'Hybrid-S (CNN + 2-Layer ViT)',
-  'YOLOv8-S (Pure CNN Baseline)',
-  'RT-DETR (Pure Transformer)',
+const MODELS: HudSelectOption[] = [
+  { value: 'Hybrid-S (CNN + 1-Layer Transformer)', label: 'Hybrid-S (CNN + 1-Layer Transformer)' },
+  { value: 'Hybrid-S (CNN + 2-Layer Transformer)', label: 'Hybrid-S (CNN + 2-Layer Transformer)' },
+  { value: 'YOLOv8-S (Pure CNN Baseline)', label: 'YOLOv8-S (Pure CNN Baseline)' },
+  { value: 'RT-DETR (Pure Transformer)', label: 'RT-DETR (Pure Transformer)' },
 ];
 
-const SCENARIOS: { key: ScenarioName; label: string }[] = [
-  { key: 'highway', label: 'Normal Highway' },
-  { key: 'pedestrian_crossing', label: 'Pedestrian Crossing' },
-  { key: 'lead_car_brake', label: 'Lead-Car Brake' },
-  { key: 'school_zone', label: 'School Zone + Red Light' },
-  { key: 'heavy_rain_night', label: 'Rain / Night Stress' },
+const SCENARIOS: HudSelectOption[] = [
+  { value: 'highway', label: 'Normal Highway' },
+  { value: 'pedestrian_crossing', label: 'Pedestrian Crossing' },
+  { value: 'lead_car_brake', label: 'Lead-Car Brake' },
+  { value: 'school_zone', label: 'School Zone + Red Light' },
+  { value: 'heavy_rain_night', label: 'Rain / Night Stress' },
+];
+
+const WEATHERS: HudSelectOption[] = [
+  { value: 'auto', label: 'Weather: Auto', icon: <Sparkles className="w-3.5 h-3.5" /> },
+  { value: 'clear_day', label: 'Clear Day', icon: <Sun className="w-3.5 h-3.5" /> },
+  { value: 'night', label: 'Night', icon: <Moon className="w-3.5 h-3.5" /> },
+  { value: 'rain', label: 'Rain', icon: <CloudRain className="w-3.5 h-3.5" /> },
+  { value: 'fog', label: 'Fog', icon: <CloudFog className="w-3.5 h-3.5" /> },
 ];
 
 const modeBtnClass = (active: boolean) =>
@@ -63,7 +72,7 @@ const TopBar: React.FC<TopBarProps> = ({
       {/* Title */}
       <div className="flex items-center gap-2 mr-2">
         <Activity className="w-5 h-5 text-drivable" />
-        <span className="text-sm font-bold tracking-wide whitespace-nowrap">HYBRID CNN–ViT ADAS</span>
+        <span className="text-sm font-bold tracking-wide whitespace-nowrap">HYBRID CNN–TRANSFORMER ADAS</span>
         <span className={`${statusPill.color} text-[10px] font-bold px-2 py-0.5 rounded-full text-black`}>
           {statusPill.label}
         </span>
@@ -84,31 +93,34 @@ const TopBar: React.FC<TopBarProps> = ({
 
       {/* Scenario selector (simulator only) */}
       {mode === 'simulator' && (
-        <select
+        <HudSelect
+          ariaLabel="Simulation Scenario"
           value={scenario}
-          onChange={e => onScenarioChange(e.target.value as ScenarioName)}
-          className="bg-white/5 border border-border text-xs text-white rounded px-2 py-1.5"
-        >
-          {SCENARIOS.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-        </select>
+          options={SCENARIOS}
+          onChange={v => onScenarioChange(v as ScenarioName)}
+          icon={<Route className="w-3.5 h-3.5" />}
+          menuClassName="min-w-[195px]"
+        />
       )}
 
       {/* Model selector */}
-      <select
+      <HudSelect
+        ariaLabel="Model Variant"
         value={modelVariant}
-        onChange={e => onModelChange(e.target.value)}
-        className="bg-white/5 border border-border text-xs text-white rounded px-2 py-1.5 max-w-[200px]"
-      >
-        {MODELS.map(m => <option key={m} value={m}>{m}</option>)}
-      </select>
+        options={MODELS}
+        onChange={onModelChange}
+        icon={<Cpu className="w-3.5 h-3.5" />}
+        className="max-w-[220px]"
+        menuClassName="min-w-[235px]"
+      />
 
       {/* Precision */}
-      <div className="flex gap-0.5 bg-white/5 rounded p-0.5">
+      <div className="flex gap-0.5 bg-white/5 border border-border rounded-md p-0.5">
         {(['FP32', 'FP16', 'INT8'] as const).map(p => (
           <button
             key={p}
             onClick={() => onPrecisionChange(p)}
-            className={`px-2 py-1 text-[10px] font-bold rounded ${
+            className={`px-2 py-1 text-[10px] font-bold rounded transition-colors ${
               precision === p ? 'bg-drivable/20 text-drivable' : 'text-gray-400 hover:text-white'
             }`}
           >{p}</button>
@@ -116,17 +128,13 @@ const TopBar: React.FC<TopBarProps> = ({
       </div>
 
       {/* Weather override */}
-      <select
+      <HudSelect
+        ariaLabel="Weather Override"
         value={weatherOverride ?? 'auto'}
-        onChange={e => onWeatherChange(e.target.value === 'auto' ? null : e.target.value)}
-        className="bg-white/5 border border-border text-xs text-white rounded px-2 py-1.5"
-      >
-        <option value="auto">Weather: Auto</option>
-        <option value="clear_day">Clear Day</option>
-        <option value="night">Night</option>
-        <option value="rain">Rain</option>
-        <option value="fog">Fog</option>
-      </select>
+        options={WEATHERS}
+        onChange={v => onWeatherChange(v === 'auto' ? null : v)}
+        menuClassName="min-w-[160px]"
+      />
 
       <div className="flex-1" />
 

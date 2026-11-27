@@ -3,7 +3,7 @@ Lightweight windowed-attention Transformer neck — the core contribution
 of the project. Replaces / augments a standard FPN+PANet with a few
 Swin-style self-attention blocks so feature maps get *global* context
 before detection, while keeping compute roughly linear in resolution
-(windowed attention, not full quadratic attention like plain ViT/DETR).
+(windowed attention, not full quadratic attention like standard transformers/DETR).
 
 Design choices, and why (useful for the ablation study + your writeup):
   - Operates on P5 (stride 32, smallest spatial size) primarily, where

@@ -16,7 +16,7 @@
     <artifactId>capstone-backend</artifactId>
     <version>1.0.0</version>
     <name>ADAS Capstone Backend</name>
-    <description>Spring Boot + MongoDB backend for the Hybrid CNN-ViT ADAS Web UI</description>
+    <description>Spring Boot + MongoDB backend for the Hybrid CNN-Transformer ADAS Web UI</description>
 
     <properties>
         <java.version>17</java.version>

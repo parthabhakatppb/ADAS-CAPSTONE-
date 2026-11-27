@@ -17,7 +17,7 @@ export function useAdasStream() {
   const [payload, setPayload] = useState<FrameInferencePayload | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [scenario, setScenario] = useState<ScenarioName>('highway');
-  const [modelVariant, setModelVariant] = useState('Hybrid-S (CNN + 2-Layer ViT)');
+  const [modelVariant, setModelVariant] = useState('Hybrid-S (CNN + 2-Layer Transformer)');
   const [precision, setPrecision] = useState<'FP32' | 'FP16' | 'INT8'>('FP32');
   const [weatherOverride, setWeatherOverride] = useState<string | null>(null);
 
@@ -239,7 +239,7 @@ export function useAdasStream() {
           video.removeAttribute('src');
           video.srcObject = mediaStream;
           await video.play();
-          addSysLog('[SYS] Camera stream started — sending frames to Hybrid CNN-ViT');
+          addSysLog('[SYS] Camera stream started — sending frames to Hybrid CNN-Transformer');
         }
       } catch (err: any) {
         const msg = err?.message || 'Camera access denied or unavailable';

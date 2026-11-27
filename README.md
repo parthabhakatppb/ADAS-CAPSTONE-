@@ -1,17 +1,17 @@
 <p align="center">
-  <img src="docs/assets/hero_banner.svg" alt="Hybrid CNN-ViT ADAS Hero Banner" width="100%" />
+  <img src="docs/assets/hero_banner.svg" alt="Hybrid CNN-Transformer ADAS Hero Banner" width="100%" />
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Frontend-React%2018%20%2B%20TypeScript%20%2B%20Vite-38BDF8?style=for-the-badge&logo=react&logoColor=white" alt="React" />
   <img src="https://img.shields.io/badge/Backend-Spring%20Boot%203.3%20WebSocket-10B981?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot" />
   <img src="https://img.shields.io/badge/Database-MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" />
-  <img src="https://img.shields.io/badge/Vision%20AI-PyTorch%20Hybrid%20CNN--ViT%20%2B%20YOLOv8-F59E0B?style=for-the-badge&logo=pytorch&logoColor=white" alt="PyTorch" />
+  <img src="https://img.shields.io/badge/Vision%20AI-PyTorch%20Hybrid%20CNN--Transformer%20%2B%20YOLOv8-F59E0B?style=for-the-badge&logo=pytorch&logoColor=white" alt="PyTorch" />
 </p>
 
 # Real-Time Hybrid CNN–Vision Transformer ADAS
 
-A full-stack **Advanced Driver Assistance System (ADAS)** for **monocular road perception, multi-object tracking, and collision risk telemetry**. It pairs a **CSPDarknet + Windowed Multi-Head Self-Attention (ViT)** detector (with pretrained YOLOv8 fallback) and **ByteTrack** tracker with a **Spring Boot 3.3 WebSocket/MongoDB backend** and a **60 FPS HTML5 Canvas + React HUD**.
+A full-stack **Advanced Driver Assistance System (ADAS)** for **monocular road perception, multi-object tracking, and collision risk telemetry**. It pairs a **CSPDarknet + Windowed Multi-Head Self-Attention** detector (with pretrained YOLOv8 fallback) and **ByteTrack** tracker with a **Spring Boot 3.3 WebSocket/MongoDB backend** and a **60 FPS HTML5 Canvas + React HUD**.
 
 ---
 

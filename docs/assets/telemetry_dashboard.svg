@@ -16,7 +16,7 @@
     <text x="422" y="71" fill="#10B981" font-family="monospace" font-size="11">42.1 mAP · 142 FPS</text>
 
     <!-- Row 2 -->
-    <text x="20" y="122" fill="#E2E8F0" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Hybrid-S (1-ViT Layer)</text>
+    <text x="20" y="122" fill="#E2E8F0" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Hybrid-S (1-Layer)</text>
     <rect x="200" y="109" width="210" height="14" rx="4" fill="#1E293B"/>
     <rect x="200" y="109" width="180" height="14" rx="4" fill="#06B6D4">
       <animate attributeName="width" from="0" to="180" dur="1.3s" fill="freeze"/>
@@ -24,7 +24,7 @@
     <text x="422" y="121" fill="#06B6D4" font-family="monospace" font-size="11">44.8 mAP · 98 FPS</text>
 
     <!-- Row 3 -->
-    <text x="20" y="172" fill="#F8FAFC" font-family="system-ui, sans-serif" font-size="12" font-weight="700">Hybrid-S (2-ViT ★)</text>
+    <text x="20" y="172" fill="#F8FAFC" font-family="system-ui, sans-serif" font-size="12" font-weight="700">Hybrid-S (2-Layer ★)</text>
     <rect x="200" y="159" width="210" height="14" rx="4" fill="#1E293B"/>
     <rect x="200" y="159" width="196" height="14" rx="4" fill="#38BDF8">
       <animate attributeName="width" from="0" to="196" dur="1.5s" fill="freeze"/>

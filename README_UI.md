@@ -29,7 +29,7 @@ npm run dev
 
 Open **http://localhost:5173** in your browser.
 
-### 2. Backend (Spring Boot WebSocket + Hybrid CNN-ViT Model)
+### 2. Backend (Spring Boot WebSocket + Hybrid CNN-Transformer Model)
 
 ```powershell
 # From the repository root (uses the included portable Maven):

@@ -1,6 +1,6 @@
 """
 Persistent stdin/stdout JSON-lines inference worker for the Spring Boot ADAS backend.
-Loads the Hybrid CNN-ViT PyTorch model (runs/phase1_hybrid_s/best.pt) with an
+Loads the Hybrid CNN-Transformer PyTorch model (runs/phase1_hybrid_s/best.pt) with an
 automatic pretrained YOLOv8 fallback when the custom checkpoint has no detections
 above threshold, then runs ByteTrack + ADAS telemetry (distance, speed, TTC, risk).
 """
@@ -121,7 +121,7 @@ class WorkerPipeline:
         h, w = frame_bgr.shape[:2]
         conf = float(req.get("conf_threshold", self.conf_thresh))
         self.tracker.high_thresh = conf
-        model_variant = req.get("model_variant") or "Hybrid-S (CNN + 2-Layer ViT)"
+        model_variant = req.get("model_variant") or "Hybrid-S (CNN + 2-Layer Transformer)"
         precision = req.get("precision") or "FP32"
         weather_override = req.get("weather_override")
 

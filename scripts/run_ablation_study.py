@@ -88,7 +88,7 @@ def run_ablation_study(device="cpu", img_size=640, fp16=False, check_weights=Non
     # Render Markdown Table
     sep = "+" + "-" * 28 + "+" + "-" * 14 + "+" + "-" * 12 + "+" + "-" * 14 + "+" + "-" * 10 + "+"
     print("\n" + sep)
-    print(f"| {'Architecture Variant':<26} | {'ViT Layers':<12} | {'Params (M)':<10} | {'Latency (ms)':<12} | {'FPS':<8} |")
+    print(f"| {'Architecture Variant':<26} | {'Attn Layers':<12} | {'Params (M)':<10} | {'Latency (ms)':<12} | {'FPS':<8} |")
     print(sep)
     for r in results:
         print(f"| {r['display']:<26} | {r['layers']:<12d} | {r['params_m']:<10.2f} | {r['latency_ms']:<12.2f} | {r['fps']:<8.1f} |")
@@ -101,7 +101,7 @@ def run_ablation_study(device="cpu", img_size=640, fp16=False, check_weights=Non
     print(r"\caption{Ablation Study: Perception Latency vs. Global Attention Layers on Constrained Edge Hardware}")
     print(r"\begin{tabular}{lcccc}")
     print(r"\hline")
-    print(r"\textbf{Model Variant} & \textbf{ViT Layers} & \textbf{Params (M)} & \textbf{Latency (ms)} & \textbf{FPS} \\")
+    print(r"\textbf{Model Variant} & \textbf{Attn Layers} & \textbf{Params (M)} & \textbf{Latency (ms)} & \textbf{FPS} \\")
     print(r"\hline")
     for r in results:
         print(f"{r['display']} & {r['layers']} & {r['params_m']:.2f} & {r['latency_ms']:.2f} & {r['fps']:.1f} \\\\")

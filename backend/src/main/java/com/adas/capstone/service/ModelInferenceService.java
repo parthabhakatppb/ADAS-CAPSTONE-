@@ -64,6 +64,20 @@ public class ModelInferenceService {
         return cwd;
     }
 
+    private String resolvePythonExecutable(Path root) {
+        if ("python".equals(pythonCmd) || "python3".equals(pythonCmd)) {
+            Path winVenv = root.resolve(".venv").resolve("Scripts").resolve("python.exe");
+            if (Files.exists(winVenv)) {
+                return winVenv.toString();
+            }
+            Path unixVenv = root.resolve(".venv").resolve("bin").resolve("python");
+            if (Files.exists(unixVenv)) {
+                return unixVenv.toString();
+            }
+        }
+        return pythonCmd;
+    }
+
     private void initWorkerProcess() {
         try {
             Path root = resolveRepoRoot();
@@ -73,8 +87,9 @@ public class ModelInferenceService {
                 return;
             }
 
-            log.info("Starting Python HybridADASModel worker: {} {}", pythonCmd, script);
-            ProcessBuilder pb = new ProcessBuilder(pythonCmd, "-u", script.toString());
+            String pythonExecutable = resolvePythonExecutable(root);
+            log.info("Starting Python HybridADASModel worker: {} {}", pythonExecutable, script);
+            ProcessBuilder pb = new ProcessBuilder(pythonExecutable, "-u", script.toString());
             pb.directory(root.toFile());
             pb.redirectError(ProcessBuilder.Redirect.INHERIT);
 

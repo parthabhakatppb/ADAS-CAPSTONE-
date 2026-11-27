@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { LogEntry, FrameInferencePayload } from '../types/adas';
+import HudSelect from './HudSelect';
 import {
   Play, Pause, SkipBack, SkipForward, Download,
-  Terminal, BarChart3, Film, Trash2,
+  Terminal, BarChart3, Film, Trash2, Gauge,
 } from 'lucide-react';
 
 interface BottomDockProps {
@@ -32,8 +33,8 @@ const TAB_CLASS = (active: boolean) =>
 // Mock ablation data
 const ABLATION = [
   { model: 'YOLOv8-S', mAP: 42.1, fps: 142 },
-  { model: 'Hybrid-S (1-ViT)', mAP: 44.8, fps: 98 },
-  { model: 'Hybrid-S (2-ViT)', mAP: 46.3, fps: 78 },
+  { model: 'Hybrid-S (1-Layer)', mAP: 44.8, fps: 98 },
+  { model: 'Hybrid-S (2-Layer)', mAP: 46.3, fps: 78 },
   { model: 'RT-DETR', mAP: 47.9, fps: 32 },
 ];
 
@@ -137,16 +138,23 @@ const BottomDock: React.FC<BottomDockProps> = ({
                 className="w-full accent-drivable cursor-pointer disabled:opacity-40"
               />
             </div>
-            <select
+            <HudSelect
+              ariaLabel="Playback Rate"
               value={String(playbackRate)}
-              onChange={(e) => onPlaybackRateChange(parseFloat(e.target.value))}
-              className="bg-white/5 border border-border text-xs text-white rounded px-2 py-1"
-            >
-              <option value="1">1x</option>
-              <option value="0.25">0.25x</option>
-              <option value="0.5">0.5x</option>
-              <option value="2">2x</option>
-            </select>
+              onChange={(v) => onPlaybackRateChange(parseFloat(v))}
+              placement="top"
+              align="right"
+              mono
+              icon={<Gauge className="w-3.5 h-3.5" />}
+              className="min-w-[78px]"
+              menuClassName="min-w-[104px]"
+              options={[
+                { value: '0.25', label: '0.25x' },
+                { value: '0.5', label: '0.5x' },
+                { value: '1', label: '1x' },
+                { value: '2', label: '2x' },
+              ]}
+            />
           </div>
         )}
 

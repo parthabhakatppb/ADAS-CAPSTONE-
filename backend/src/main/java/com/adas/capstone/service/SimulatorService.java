@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class SimulatorService {
 
-    private String modelVariant = "Hybrid-S (CNN + 2-Layer ViT)";
+    private String modelVariant = "Hybrid-S (CNN + 2-Layer Transformer)";
     private String precision = "FP32";
     private double confThreshold = 0.35;
     private final AtomicInteger frameCounter = new AtomicInteger(0);

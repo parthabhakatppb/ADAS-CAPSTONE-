@@ -51,7 +51,7 @@ const TelemetrySidebar: React.FC<TelemetrySidebarProps> = ({ payload }) => {
   const stages = [
     { name: 'Pre', ms: payload.latency_ms.preprocess, color: '#6366f1' },
     { name: 'CNN', ms: payload.latency_ms.backbone, color: '#06B6D4' },
-    { name: 'ViT', ms: payload.latency_ms.transformer_neck, color: '#8b5cf6' },
+    { name: 'Attn', ms: payload.latency_ms.transformer_neck, color: '#8b5cf6' },
     { name: 'Trk', ms: payload.latency_ms.tracker, color: '#F59E0B' },
     { name: 'Tel', ms: payload.latency_ms.telemetry, color: '#10B981' },
   ];

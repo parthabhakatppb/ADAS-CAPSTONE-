@@ -84,7 +84,7 @@ const ViewportHUD: React.FC<ViewportHUDProps> = ({
         >
           <Upload className="w-10 h-10 text-drivable mb-3" />
           <p className="text-sm font-semibold text-white">Drop a dashcam video here or click to browse</p>
-          <p className="text-xs text-gray-400 mt-1">Supports .mp4, .webm, .mov — streamed live to Hybrid CNN-ViT</p>
+          <p className="text-xs text-gray-400 mt-1">Supports .mp4, .webm, .mov — streamed live to Hybrid CNN-Transformer</p>
         </div>
       )}
 

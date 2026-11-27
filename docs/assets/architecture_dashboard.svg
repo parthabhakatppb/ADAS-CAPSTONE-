@@ -11,7 +11,7 @@
 
   <rect width="1200" height="440" rx="16" fill="#070B14" stroke="#1E293B" stroke-width="2"/>
   <text x="40" y="42" fill="#F8FAFC" font-family="system-ui, sans-serif" font-size="20" font-weight="700">3D END-TO-END PERCEPTION &amp; TELEMETRY PIPELINE</text>
-  <text x="40" y="64" fill="#64748B" font-family="monospace" font-size="12">Low-latency WebSocket streaming across Browser Capture → Spring Boot 3.3 → PyTorch Hybrid CNN–ViT</text>
+  <text x="40" y="64" fill="#64748B" font-family="monospace" font-size="12">Low-latency WebSocket streaming across Browser Capture → Spring Boot 3.3 → PyTorch Hybrid CNN–Transformer</text>
 
   <!-- 3D Layer 1: Input Sources -->
   <g transform="translate(40, 110)" filter="url(#cardShadow)">
@@ -88,7 +88,7 @@
     <polygon points="234,0 246,12 232,262 220,250" fill="#422909" stroke="#F59E0B" stroke-opacity="0.5"/>
     <text x="26" y="34" fill="#F59E0B" font-family="monospace" font-size="12" font-weight="700">04 / PYTORCH ENGINE</text>
     <rect x="24" y="54" width="180" height="44" rx="6" fill="#0F172A" stroke="#1E293B"/>
-    <text x="36" y="74" fill="#F8FAFC" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Hybrid CNN–ViT</text>
+    <text x="36" y="74" fill="#F8FAFC" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Hybrid CNN–Transformer</text>
     <text x="36" y="90" fill="#94A3B8" font-family="monospace" font-size="10">CSPDarknet + MHSA Neck</text>
 
     <rect x="24" y="110" width="180" height="44" rx="6" fill="#0F172A" stroke="#1E293B"/>

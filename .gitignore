@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
+.venv/
+venv/
 
 # Datasets (raw and merged data folders; keep dataset code)
 data/*

@@ -514,7 +514,7 @@ def run_live_demo(
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Live Hybrid CNN-ViT ADAS Perception Demo")
+    ap = argparse.ArgumentParser(description="Live Hybrid CNN-Transformer ADAS Perception Demo")
     ap.add_argument("--video", default="sample_dashcam.mp4", help="Video path or camera index")
     ap.add_argument("--weights", default="runs/phase1_hybrid_s/best.pt", help="Hybrid model checkpoint")
     ap.add_argument("--variant", default="hybrid_s", choices=["cnn_baseline", "hybrid_n", "hybrid_s", "hybrid_m"])

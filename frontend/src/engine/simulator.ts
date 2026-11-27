@@ -150,7 +150,7 @@ function riskFromTTC(ttc: number | null, dist: number, cls: ObjectClass): RiskLe
 // ─── Main simulator class ───────────────────────────────────────────────────
 export class AdasSimulator {
   private state: SimState;
-  private modelVariant = 'Hybrid-S (CNN + 2-Layer ViT)';
+  private modelVariant = 'Hybrid-S (CNN + 2-Layer Transformer)';
   private precision: 'FP32' | 'FP16' | 'INT8' = 'FP32';
   private weatherOverride: WeatherCondition | null = null;
 
